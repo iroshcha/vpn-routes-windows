@@ -1,0 +1,9 @@
+/VPN-Routes-settings.json
+/custom-routes.json
+/panel-token.txt
+*.ovpn
+*.conf
+*.vpn
+*.key
+*.pfx
+*.log

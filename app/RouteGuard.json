@@ -1,0 +1,8 @@
+{
+  "AmneziaAlias": "AmneziaVPN",
+  "WorkGateway": "",
+  "WorkAdapterPattern": "OpenVPN",
+  "WorkEndpointIPv4": [],
+  "DiscoveryIPv4": [],
+  "PollSeconds": 3
+}

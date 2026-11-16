@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Маршруты VPN</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"></div>
+
+  <header class="top">
+    <div class="brand">
+      <img src="/favicon.svg" alt="" width="40" height="40">
+      <div>
+        <h1>Маршруты VPN</h1>
+        <p id="subtitle">OpenVPN для работы · Amnezia для интернета · дом напрямую</p>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="pulse" id="pulse" data-state="wait" title="Состояние стража маршрутов">
+        <span class="dot"></span><span id="pulseText">Подключаюсь…</span>
+      </div>
+      <button class="icon-btn" id="themeBtn" type="button" title="Сменить тему" aria-label="Сменить тему">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="alert hidden" id="guardAlert" role="alert">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20z M12 10v4 M12 17h.01"/></svg>
+      <div><b id="guardAlertTitle"></b><p id="guardAlertText"></p></div>
+    </div>
+
+    <section class="card hero">
+      <div class="card-head">
+        <div>
+          <h2>Карта трафика</h2>
+          <p class="muted">Куда уходят пакеты с этого компьютера прямо сейчас</p>
+        </div>
+        <div class="legend">
+          <span class="lg k-work">Работа</span>
+          <span class="lg k-amnezia">Amnezia</span>
+          <span class="lg k-direct">Напрямую</span>
+        </div>
+      </div>
+      <div class="topo-wrap"><svg id="topo" viewBox="0 0 960 330" role="img" aria-label="Схема маршрутов"></svg></div>
+      <div class="others" id="others"></div>
+    </section>
+
+    <section class="stats" id="stats">
+      <div class="tile k-work"><div class="tile-label">Рабочие маршруты</div><div class="tile-value" id="stWork">—</div><div class="tile-sub">идут через OpenVPN</div></div>
+      <div class="tile k-direct"><div class="tile-label">Локальная сеть</div><div class="tile-value" id="stLan">—</div><div class="tile-sub">подсетей напрямую</div></div>
+      <div class="tile" id="tileConflicts"><div class="tile-label">Конфликты сейчас</div><div class="tile-value" id="stConf">—</div><div class="tile-sub" id="stConfSub">страж проверяет каждые 3 с</div></div>
+      <div class="tile k-amnezia"><div class="tile-label">Конфликтов устранено</div><div class="tile-value" id="stFixed">—</div><div class="tile-sub" id="stFixedSub">за 24 часа</div><svg class="spark" id="spark" viewBox="0 0 240 34" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+    </section>
+
+    <div class="grid2">
+      <section class="card" id="traceCard">
+        <div class="card-head">
+          <div>
+            <h2>Куда пойдёт трафик?</h2>
+            <p class="muted">IP, домен или ссылка — покажу, через какой туннель уйдёт запрос</p>
+          </div>
+          <kbd title="Горячая клавиша">T</kbd>
+        </div>
+        <form id="traceForm" class="row-form" autocomplete="off">
+          <input id="traceInput" type="text" placeholder="example.com, 198.51.100.42 или https://…" spellcheck="false" maxlength="300">
+          <button class="btn primary" type="submit"><span>Проверить</span></button>
+        </form>
+        <div class="examples" id="traceExamples"></div>
+        <div id="traceResult" class="trace-result"></div>
+      </section>
+
+      <section class="card" id="rulesCard">
+        <div class="card-head">
+          <div>
+            <h2>Мои правила</h2>
+            <p class="muted">Свои маршруты: страж держит их и восстанавливает после переподключений</p>
+          </div>
+          <span class="count-pill" id="rulesCount">0</span>
+        </div>
+        <form id="ruleForm" class="rule-form" autocomplete="off">
+          <input id="ruleTarget" type="text" placeholder="IP, подсеть 10.20.0.0/16 или домен" spellcheck="false" maxlength="300" required>
+          <div class="seg" id="viaSeg" role="radiogroup" aria-label="Путь">
+            <button type="button" class="seg-btn k-work active" data-via="work" role="radio" aria-checked="true">Работа</button>
+            <button type="button" class="seg-btn k-amnezia" data-via="amnezia" role="radio" aria-checked="false">Amnezia</button>
+            <button type="button" class="seg-btn k-direct" data-via="direct" role="radio" aria-checked="false">Напрямую</button>
+          </div>
+          <input id="ruleNote" type="text" placeholder="Комментарий (необязательно)" maxlength="80">
+          <button class="btn primary" type="submit">Добавить правило</button>
+          <p class="hint" id="viaHint"></p>
+        </form>
+        <ul class="rules" id="rulesList"></ul>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Таблица маршрутов</h2>
+          <p class="muted">Активные IPv4-маршруты Windows · обновляется каждые 3 секунды</p>
+        </div>
+        <kbd title="Горячая клавиша">/</kbd>
+      </div>
+      <div class="toolbar">
+        <div class="chips" id="kindChips"></div>
+        <div class="toolbar-right">
+          <label class="switch-label"><input type="checkbox" id="showNoise"><span class="switch"></span>служебные</label>
+          <input id="routeSearch" type="search" placeholder="Поиск по адресу, шлюзу, адаптеру" spellcheck="false">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="routes">
+          <thead>
+            <tr>
+              <th data-sort="prefix">Назначение</th>
+              <th data-sort="kind">Путь</th>
+              <th data-sort="alias">Адаптер</th>
+              <th data-sort="nextHop">Шлюз</th>
+              <th data-sort="metric" class="num">Метрика</th>
+              <th>Метки</th>
+            </tr>
+          </thead>
+          <tbody id="routesBody"></tbody>
+        </table>
+      </div>
+      <p class="muted small" id="routesFoot"></p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Журнал стража</h2>
+          <p class="muted">Что исправлялось и когда</p>
+        </div>
+        <div class="seg small" id="logSeg">
+          <button type="button" class="seg-btn active" data-log="all">Всё</button>
+          <button type="button" class="seg-btn" data-log="important">Без конфликтов</button>
+        </div>
+      </div>
+      <ol class="log" id="logList"></ol>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>RouteGuard · vpn.localhost · панель доступна только с этого компьютера</span>
+    <span id="footClock"></span>
+  </footer>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <div class="lock hidden" id="lock">
+    <div class="lock-card">
+      <img src="/favicon.svg" alt="" width="56" height="56">
+      <h2>Нужен ключ панели</h2>
+      <p>Один раз откройте панель ярлыком <b>«Маршруты VPN»</b> на рабочем столе или файлом <b>06-Panel.cmd</b>. После этого браузер запомнит ключ, и панель будет открываться просто по адресу <b>vpn.localhost</b>.</p>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
